@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             "simple_publisher = diffbot_py_pkg.simple_publisher_example:main",
-            "simple_subscriber = diffbot_py_pkg.simple_subscriber_example:main"
+            "simple_subscriber = diffbot_py_pkg.simple_subscriber_example:main",
+            "simple_parameter = diffbot_py_pkg.simple_parameter:main"
         ],
     },
 )
