@@ -3,6 +3,7 @@
 
 
     <xacro:include filename="$(find diffbot_description)/urdf/diffbot_gazebo.xacro"/>
+    <xacro:include filename="$(find diffbot_description)/urdf/diffbot_ros2_control.xacro"/>
     
     <material name="body_dark_gray">
         <color rgba="0.2 0.2 0.2 1.0" />
