@@ -27,6 +27,7 @@ setup(
             "simple_action_client = diffbot_py_pkg.simple_action_client:main",
             "simple_turtlesim_kinematics = diffbot_py_pkg.simple_turtlesim_kinematics:main",
             "simple_turtlesim_odometry = diffbot_py_pkg.simple_turtlesim_odometry:main",
+            "simple_tf_kinematics = diffbot_py_pkg.simple_tf_kinematics:main",
         ],
     },
 )
