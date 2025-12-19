@@ -18,6 +18,9 @@ private:
     double left_wheel_prev_pos_;
     double right_wheel_prev_pos_;
     rclcpp::Time prev_time_;
+    double x_;
+    double y_;
+    double theta_;
 
     void velCallback(const geometry_msgs::msg::TwistStamped & msg);
     void jointCallback(const sensor_msgs::msg::JointState & msg);
