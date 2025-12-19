@@ -4,10 +4,12 @@ from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import TwistStamped
 from sensor_msgs.msg import JointState
+from nav_msgs.msg import Odometry
 import numpy as np
 from rclpy.time import Time
 from rclpy.constants import S_TO_NS
 import math
+from tf_transformations import quaternion_from_euler
 
 class SimpleController(Node):
     def __init__(self):
@@ -31,12 +33,19 @@ class SimpleController(Node):
 
         self.wheel_cmd_pub_ = self.create_publisher(Float64MultiArray, "/simple_velocity_controller/commands", 10)
         self.vel_sub_ = self.create_subscription(TwistStamped, "/diffbot_controller/cmd_vel", self.velCallback, 10)
-
         self.joint_sub_ = self.create_subscription(JointState, "joint_states", self.jointCallback, 10)
-
+        self.odom_pub_ = self.create_publisher(Odometry, "/diffbot_controller/odom", 10)
 
         self.speed_conversion_ = np.array([[self.wheel_radius_/2, self.wheel_radius_/2],
                                            [self.wheel_radius_/self.wheel_separation_, -self.wheel_radius_/self.wheel_separation_]])
+
+        self.odom_msg_ = Odometry()
+        self.odom_msg_.header.frame_id = "odom"
+        self.odom_msg_.child_frame_id = "base_footprint"
+        self.odom_msg_.pose.pose.orientation.x = 0.0
+        self.odom_msg_.pose.pose.orientation.y = 0.0
+        self.odom_msg_.pose.pose.orientation.z = 0.0
+        self.odom_msg_.pose.pose.orientation.w = 1.0
 
         self.get_logger().info("The Conversion Matrix is  %s" % self.speed_conversion_)
 
@@ -70,8 +79,18 @@ class SimpleController(Node):
         self.x_ += d_s * math.cos(self.theta_)
         self.y_ += d_s * math.sin(self.theta_)
 
-        self.get_logger().info("\nLinear: %f\n Angular: %f\n" % (linear, angular))
-        self.get_logger().info("\nx: %f\n y: %f\n theta: %f\n" % (self.x_, self.y_, self.theta_))
+        q = quaternion_from_euler(0, 0, self.theta_)
+        self.odom_msg_.pose.pose.orientation.x = q[0]
+        self.odom_msg_.pose.pose.orientation.y = q[1]
+        self.odom_msg_.pose.pose.orientation.z = q[2]
+        self.odom_msg_.pose.pose.orientation.w = q[3]
+        self.odom_msg_.header.stamp = self.get_clock().now().to_msg()
+        self.odom_msg_.pose.pose.position.x = self.x_
+        self.odom_msg_.pose.pose.position.y = self.y_
+        self.odom_msg_.twist.twist.linear.x = linear
+        self.odom_msg_.twist.twist.angular.x = angular
+
+        self.odom_pub_.publish(self.odom_msg_)
 
 def main():
     rclpy.init()
