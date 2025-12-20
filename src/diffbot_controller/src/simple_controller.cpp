@@ -1,5 +1,6 @@
 #include "diffbot_controller/simple_controller.hpp"
 #include <Eigen/Geometry>
+#include <tf2/LinearMath/Quaternion.hpp>
 
 using namespace std::placeholders;
 
@@ -27,6 +28,14 @@ SimpleController::SimpleController(const std::string &name)
                                                                     std::bind(&SimpleController::velCallback, this, _1));
 
     joint_sub_ = create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&SimpleController::jointCallback, this, _1));
+    odom_pub_ = create_publisher<nav_msgs::msg::Odometry>("/diffbot_controller/odom", 10);
+    
+    odom_msg_.header.frame_id = "odom";
+    odom_msg_.child_frame_id = "base_footprint";
+    odom_msg_.pose.pose.orientation.x = 0.0;
+    odom_msg_.pose.pose.orientation.y = 0.0;
+    odom_msg_.pose.pose.orientation.z = 0.0;
+    odom_msg_.pose.pose.orientation.w = 1.0;
 
     speed_conversion_ << wheel_radius_/2, wheel_radius_/2, wheel_radius_/wheel_separation_, -wheel_radius_/wheel_separation_;
 
@@ -71,9 +80,22 @@ void SimpleController::jointCallback(const sensor_msgs::msg::JointState & msg)
     theta_ += d_theta;
     x_ += d_s * std::cos(theta_);
     y_ += d_s * std::sin(theta_);
- 
-    RCLCPP_INFO_STREAM(get_logger(), "\nLinear: " << linear << "\nAngular: " << angular << "\n");
-    RCLCPP_INFO_STREAM(get_logger(), "\nx: " << x_ << "\n" << "y: " << y_ << "\n" << "theta: " << theta_ << "\n");
+
+    tf2::Quaternion q;
+    q.setRPY(0, 0, theta_);
+
+    odom_msg_.pose.pose.orientation.x = q.x();
+    odom_msg_.pose.pose.orientation.y = q.y();
+    odom_msg_.pose.pose.orientation.z = q.z();
+    odom_msg_.pose.pose.orientation.w = q.w();
+    odom_msg_.header.stamp = get_clock()->now();
+    odom_msg_.pose.pose.position.x = x_;
+    odom_msg_.pose.pose.position.y = y_;
+    odom_msg_.twist.twist.linear.x = linear;
+    odom_msg_.twist.twist.angular.z = angular;
+
+    odom_pub_->publish(odom_msg_);
+
 }
 
 int main(int argc, char* argv[])
