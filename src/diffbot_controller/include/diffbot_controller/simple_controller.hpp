@@ -1,3 +1,6 @@
+#ifndef SIMPLE_CONTROLLER_HPP
+#define SIMPLE_CONTROLLER_HPP
+
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
@@ -36,3 +39,5 @@ private:
     geometry_msgs::msg::TransformStamped transform_stamped_;
     
 };
+
+#endif
